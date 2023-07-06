@@ -21,6 +21,7 @@ It serves as an alternative choice of developing and deploying a pipeline withou
 - EC2
 
 ## Project Architecture
+![DDC_AWSCiCDProArch](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/856bd8c2-9d5d-44fc-a9bc-f377a8b4c51e)
 
 The following things take place when a commit takes place:
 - Whenever a commit is made the CodeCommit pipeline is triggered automatically.
@@ -142,14 +143,22 @@ The following things take place when a commit takes place:
 - **CONFIGURE USER POLICIES:**
     - IAM -> create user, programmatic access -> create policy :
         - Service : codecommit, actions : manual actions : all, resources : specific : provide region and name of the repo -> review and create policy.
+      ![IAM-custom-policy-created](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/d59716ac-c132-4e96-8e86-958e225cf109)
+
+	![IAM-user-created](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/a0c800de-cbbd-4d16-b180-13ebd8d7b2e2)
 		- Select policy from existing policies -> create user -> delete access keys and secret keys -> upload ssh keys for codecommmit.
 	- Generate keys in the local machine:
 		- cd into C:Users/cr7su/.ssh folder then run 
         - name the key file and create using the folllowing command.
 		```bash
         ssh-keygen
-        ``` 
+        ```
+  	![ssh-key-created](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/3a9a5ca3-a78a-4ae4-ae46-cc3f4a45cb2a)
+
 	- Upload the public key contents to the console -> upload ssh keys for codecommmit.
+   	![pub-key-uploaded](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/8c6d1a7b-5e8c-428d-b9b2-1860afdc4720)
+	![ssh-authentication-success](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/b31831db-3860-42b2-9959-19b9cd59c10b)
+
 	- Generate a config file with the following contents:
 		host : repo arn
 		user : public rsa key
@@ -200,6 +209,8 @@ The following things take place when a commit takes place:
     ```bash
         git push --tags
     ```
+    ![migrate-github-codecommit-success](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/8914ca00-00cb-423d-8e3a-7a622ce854ef)
+
 ### CREATE A BUILD JOB :
 - **CODECOMMIT CODEBUILD**
     - Create project:
@@ -211,6 +222,8 @@ The following things take place when a commit takes place:
          - Create s3 bucket and select that bucket for artifact storage
          - Configure cloudwatch logs 
          - Edit the codebuild-vprofile-Build-service-role in IAM and add AmazonS3FullAccess permission to it.
+  ![codebuild-setup-success](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/67b71f9e-5dd5-4dce-9c7d-708308009c54)
+
     - Run the build
 
 ### CHANGE Elastic Beanstalk CONFIGURATION:
@@ -230,8 +243,22 @@ The following things take place when a commit takes place:
     - Review and create pipeline.
 
 As soon as the pipeline is created, it is triggered and the execution takes place.
+![pipeline-exec-successful](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/5da9d49f-f620-4f31-9cee-a8535daa447f)
+![eb-env-updated](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/371eb32b-e9ec-4002-9d6a-8b1805d214b5)
 
 ## Results
+As artifact is deployed, I validated it by visiting the following pages:
+- **Login Page**
+![login-page](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/7efbbbe6-d450-4780-a54a-9ed6fec2e4be)
+- **Home Page**
+![home-page](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/b3dade74-61d4-4867-9938-46eedf123423)
+
+Here we can see that the backend services RDS, Elasticache and RabbitMQ are also configured correctly.
+- **Rabbitmq status**
+![rabbitmq-start-success](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/c600d583-18e2-4daf-845c-39febf678ab3)
+- **User Details Page**
+![user-details-page](https://github.com/SumitM01/CI-CD-project-using-AWS-CodeCommit/assets/65524561/0e7aa500-b972-4ff6-ba4a-f687c115f826)
+
 ## Conclusion
 As documented in this markdown format file, I have invested a significant amount of time in researching, learning, debugging to implement this project. If you appreciate this document please share with friends and do give it a try. 
 ## References
