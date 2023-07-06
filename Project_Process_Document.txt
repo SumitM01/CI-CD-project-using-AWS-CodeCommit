@@ -1,0 +1,84 @@
+###########################################################
+#                                                         #
+#                    AWS CI CD PROJECT                    #
+#                                                         #
+###########################################################
+
+SETUP BEANSTALK :
+on aws eb console -> create app -> create environment 
+	CONFIGURE ENVIRONMENT
+		environment tier : web server
+		environment information : set env name and cname for dns
+		platform : tomcat
+		presets : custom configuration
+
+	CONFIGURE SERVICE ACCESS
+		if aws-beanstalk-service-role doesn't exist -> create and use a new service role, otherwise use existing service role
+		select EC2 key pair 
+		select EC2 instance profile role : 
+
+	SET UP NETWORKING, DATABASE AND TAGS
+		vpc : default or created
+		instance settings : public IP enabled
+		tags : name of project
+
+	CONFIGURE INSTANCE TRAFFIC AND SCALING
+		capacity : auto scaling group -> env type : load balanced -> instances : 2 to 8 -> instance types : t3.micro
+	
+	CONFIGURE UPDATES, MONITORING AND LOGGING
+		rolling updates and deployments -> deployment policy : rolling, batch size : percentage : 50 %
+	
+	REVIEW AND CREATE ENVIRONMENT
+
+SETUP RDS :
+	STANDARD CREATE -> MYSQL LATEST 5 VERSION -> FREE TIER -> NAME DATABASE -> USERNAME ADMIN -> AUTO GENERATE PASSWORD -> STORAGE : 20GB -> CREATE NEW SG -> ADDITIONAL CONFIGURATION GIVE DATABASE NAME (IF AVAILABLE) -> CREATE DATABASE -> VIEW CREDENTIALS -> note down username and password for database access. store connection endpoint also.
+	
+	ALLOW instances to access RDS :
+		copy sg id of load balancer -> edit inbound rules of rds sg -> allow port 3306 from load balancer sg
+
+	CONFIGURE DATABASE :
+		ssh to one instance -> install mariadb using "yum install mariadb" -> connect to database in the following format "mysql -h RDS endpoint -u admin -pPassword"
+		
+		IF database not created -> create a database named accounts, otherwise leave it.
+
+		insert data from sql file:
+		clone the vp-rem git repository of vprofile -> /src/main/resources/db_backup.sql -> enter the command to initialize the database "mysql -h RDS endpoint -u admin -pPassword accounts < /src/main/resources/db_backup.sql"
+
+CHANGE EB CONFIGURATION:
+	CONFIGURE INSTANCE TRAFFIC AND SCALING:
+		processes -> radio button -> actions -> edit -> health check -> path -> /login -> stickiness enabled -> save -> apply changes
+
+CONFIURE AWS CODECOMMIT AND COMMIT DATA FROM GITHUB TO CODECOMMIT:
+	CREATE A REPO :
+	give some name and description and create
+	
+	CONFIGURE USER POLICIES:
+		iam -> create user, programmatic access -> create policy :
+			service : codecommit, actions : manual actions : all, resources : specific : provide region and name of the repo -> review and create policy
+		select policy from existing policies -> create user -> delete access keys and secret keys -> upload ssh keys for codecommmit
+	generate keys in the local machine:
+		cd into C:Users/cr7su/.ssh folder then run 
+		ssh keygen.exe -> name the key file and create.
+
+	upload the public key contents to the console -> upload ssh keys for codecommmit
+	generate a config file :
+		host : repo arn
+		user : public rsa key
+		identity : path to private rsa key
+	chmod 600 config -> run ssh repo arn to authenticate over ssh
+
+	COMMIT DATA FROM GITHUB TO CODECOMMIT:
+		git checkout master -> git branch -a | grep -v HEAD | cut -d ' /' -f3 | grep -v master > branches -> (in linux) for i in 'cat branches'; do git checkout $i; done (in windows powershell) $branches = Get-Content branches
+foreach ($branch in $branches) {
+    git checkout $branch
+}
+  -> git fetch --tags -> git remote rm origin -> git remote add origin "codecommit repo ssh url" -> git push origin --all -> git push --tags
+
+
+		
+
+CREATE A BUILD JOB :
+	CODECOMMIT CODEBUILD -> create project -> codecommit -> select repo -> select branch : vp-rem -> managed image -> ubuntu -> new service role -> 3gb mem and 2 vcpus -> insert build commands -> open editor -> paste contents of build repo yaml file -> select an existing s3 bucket -> configure cloudwatch logs -> if codebuild-vprofile-Build-service-role already exists then delete that role and create a new one 
+
+CREATE PIPELINE : 
+	name pipeline , next -> select codecommit, select your repo, select branch, next -> codebuild, select your project, next -> elastic beanstalk, select your app, select your env, next -> review and create pipeline.
